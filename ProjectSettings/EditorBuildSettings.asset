@@ -4,5 +4,20 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Prototype/Main.unity
+    guid: 16d1c082aca611f42b348c6a1d6fd696
+  - enabled: 1
+    path: Assets/Scenes/Prototype/AbandonedValley.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/Prototype/Trailer1.unity
+    guid: 018369ced20817c4eaddaacac232351b
+  - enabled: 1
+    path: Assets/Scenes/Prototype/Trailer2.unity
+    guid: d8154085921cd7b46b099969ccc7d69a
+  - enabled: 1
+    path: Assets/Scenes/Prototype/Trailer3.unity
+    guid: 4b67a25f63af7cb4086b2d45af1b56fe
   m_configObjects: {}

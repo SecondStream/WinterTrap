@@ -1,8 +1,10 @@
 ﻿namespace WinterTrap.Debug
 {
+    using Action;
     using UnityEngine;
+    using View;
 
-    public class DebugPlayer : MonoBehaviour
+    public class DebugPlayer : View, IPlayerView
     {
         [SerializeField]
         private CharacterController _controller;
@@ -19,10 +21,23 @@
         [SerializeField]
         private float _cameraMaxAngle = 80;
 
+        [SerializeField]
+        private LayerMask _rayCastMask;
+
         private float _currentCameraAngle = 0;
 
-        private void Update()
+        public string fromTransition { get; set; }
+
+        private void Awake()
         {
+            DontDestroyOnLoad(gameObject);
+        }
+
+        protected override void DoUpdate(float deltaTime)
+        {
+            // Есть баг, что состояние клавиш и осей в состоянии false/0 после смены сцены.
+            // ну точнее это баг юнити, существующий вот уже лет семь как, вроде как, если
+            // грузить сцену асинхронно - проблема уходит.
             var mx = Input.GetAxis("Mouse X");
             var my = Input.GetAxis("Mouse Y");
             var h = Input.GetAxis("Horizontal");
@@ -58,7 +73,29 @@
 
             move += Physics.gravity;
 
-            _controller.Move(move * Time.deltaTime);
+            _controller.Move(move * deltaTime);
+        }
+
+        protected override void DoLateUpdate(float deltaTime)
+        {
+            if (Physics.Raycast(_camera.transform.position, _camera.transform.forward,
+                out RaycastHit hit, 1.5f, _rayCastMask))
+            {
+                var actions = hit.collider.GetComponents<IPlayerAction>();
+                for (int i = 0, len = actions.Length; i < len; ++i)
+                {
+                    if (Input.GetKeyUp(KeyCode.E))
+                    {
+                        var transition = actions[i] as Transition;
+                        if (transition != null)
+                            fromTransition = transition.name;
+
+                        actions[i].DoIt(this);
+                    }
+
+                    // TODO: Выводить сообщение в UI.
+                }
+            }
         }
     }
 }
