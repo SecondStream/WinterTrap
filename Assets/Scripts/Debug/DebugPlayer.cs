@@ -4,8 +4,9 @@
     using UnityEngine;
     using View;
 
-    public class DebugPlayer : View, IPlayerView
+    public class DebugPlayer : View, IPlayerView, IDebugUIHintTransmitter
     {
+#pragma warning disable 0649
         [SerializeField]
         private CharacterController _controller;
 
@@ -23,10 +24,16 @@
 
         [SerializeField]
         private LayerMask _rayCastMask;
+#pragma warning restore 0649
 
-        private float _currentCameraAngle = 0;
+        private float _currentCameraAngle;
 
         public string fromTransition { get; set; }
+
+        private IPlayerAction _waitAction;
+
+        public event UIShowHint onShowHint;
+        public event UIHideHint onHideHint;
 
         private void Awake()
         {
@@ -36,8 +43,7 @@
         protected override void DoUpdate(float deltaTime)
         {
             // Есть баг, что состояние клавиш и осей в состоянии false/0 после смены сцены.
-            // ну точнее это баг юнити, существующий вот уже лет семь как, вроде как, если
-            // грузить сцену асинхронно - проблема уходит.
+            // UPD: Пофикшено аддитивной загрузкой.
             var mx = Input.GetAxis("Mouse X");
             var my = Input.GetAxis("Mouse Y");
             var h = Input.GetAxis("Horizontal");
@@ -78,24 +84,53 @@
 
         protected override void DoLateUpdate(float deltaTime)
         {
+            IPlayerAction waitAction = null;
             if (Physics.Raycast(_camera.transform.position, _camera.transform.forward,
                 out RaycastHit hit, 1.5f, _rayCastMask))
             {
-                var actions = hit.collider.GetComponents<IPlayerAction>();
-                for (int i = 0, len = actions.Length; i < len; ++i)
+                var action = hit.collider.GetComponent<IPlayerAction>();
+                if (action != null)
                 {
                     if (Input.GetKeyUp(KeyCode.E))
                     {
-                        var transition = actions[i] as Transition;
+                        var transition = action as Transition;
                         if (transition != null)
                             fromTransition = transition.name;
 
-                        actions[i].DoIt(this);
+                        action.DoIt(this);
                     }
-
-                    // TODO: Выводить сообщение в UI.
+                    else
+                    {
+                        waitAction = action;
+                    }
                 }
             }
+
+            if (waitAction != null)
+                AddWaitPressButton(waitAction);
+            else
+                RemoveWaitPressButton();
+        }
+
+        private void AddWaitPressButton(IPlayerAction action)
+        {
+            if (_waitAction != action)
+                onShowHint?.Invoke(this, action.localizedMessage, 2f);
+
+            _waitAction = action;
+        }
+
+        private void RemoveWaitPressButton()
+        {
+            if (_waitAction != null)
+                onHideHint?.Invoke(this);
+            _waitAction = null;
+        }
+
+        protected override void DoDestroy()
+        {
+            onShowHint = null;
+            onHideHint = null;
         }
     }
 }

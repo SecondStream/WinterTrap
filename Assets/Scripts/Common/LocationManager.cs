@@ -8,8 +8,10 @@
 
     public class LocationManager : BaseBehaviour
     {
+#pragma warning disable 0649
         [SerializeField]
         private string _startLocation;
+#pragma warning restore 0649
 
         public void LoadLocation(string locationName, Action onComplete = null)
         {

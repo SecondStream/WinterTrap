@@ -6,11 +6,10 @@
 
     public class DebugSceneView : BaseBehaviour
     {
+#pragma warning disable 0649
         [SerializeField]
         private GameObject _player;
-
-        [SerializeField]
-        private bool _started;
+#pragma warning restore 0649
 
         private List<IView> _views = new List<IView>();
 
